@@ -39,6 +39,11 @@ urlpatterns = [
     url(r'^$', RedirectView.as_view(url='/api/', permanent=False)),
     url(r'', include('django_browserid.urls')),
     url(r'^admin/', include(teach_admin.urls)),
+    
+    # URLs for functions to call credly APIs.
+    url(r"^authenticate/", "teach.badges.authenticate", name="authenticate"),
+    url(r"^find/", "teach.badges.findBadges", name="find"),
+    
 ]
 
 if settings.IDAPI_ENABLE_FAKE_OAUTH2:
