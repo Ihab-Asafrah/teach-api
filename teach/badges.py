@@ -52,7 +52,7 @@ def findBadges(request):
     url = "https://api.credly.com/v1.1/me/badges/created?access_token=" + token + "&page=1&per_page=10&order_direction=ASC"
     response = requests.get(url, headers=header)
     
-    return HttpResponse(response.content)
+    return HttpResponse(response.content) #CCCCCCC
     
     
 
