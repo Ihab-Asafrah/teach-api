@@ -25,21 +25,25 @@ from .new_webmaker import get_idapi_url
 import httplib, urllib
 from requests.auth import HTTPBasicAuth
 from django.views.decorators.csrf import requires_csrf_token 
+from mmap import PAGESIZE
 
 
-header = {"X-Api-Key": "0a15419a6dd7bdca91a24aa536457e3d", 
-          "X-Api-Secret": "rMs8RVcwfPDEyNdeRPpmUfeBhu4dDZvLVSHBxhWU7vQhIIMO38xPkYLXD2n+vU5l7zywcXs0D5Uy4XvWYE3Fbt0XK5zbVCLxzWl6+uNsVXpHI+NToAkZZy1Q2C+D5Oh72/OjyWq9U7soHgbYhNCgebblziLhzexIk+OB0y1axH4="}
+header = {"X-Api-Key": "b22824fd98b0c98cebcd828fcc060949", 
+          "X-Api-Secret": "XsfOH17tBtDEGB7iJ6UMBwApd45n0SOHz/hXqb2XXJ6FIqDt1ppBBNt9bM0xAdCI1r0CtjZ8fjHMC3krdw0bPQhHzOzhq4U3RYYGDG2n5dad1hltc/nc8OKsPCk65CW+gMCoxht8E0bdLm6A1nYOJlyrDCJhYRwwhBgy1GxvbLM="}
 
-username = "abualkarmi@gmail.com"
-password = "123123"
-token = "94eaf1ee16672d422a5c24aa94756064c86e85618a5ca5aa171c1d29995cb527ebebe561ddc9d7e7dc59c59191bb8648341dc0c3f05b216d49c177bb47c37261"
+username = "mozilla@credly.com"
+password = "V9tuTUgy"
+token = "6685a1a0022cb8219ecb1305de6f83f804e6ba0d047fc595d3abb811fbcb647f504c7fcd74cd8efe69f31a78bd72294a136c0ed573ca6dc68a7a42473c5b0d18"
 
+DEFAULT_PAGE_NUM = 1
+BADGES_PER_PAGE = 10
+DEFAULT_ORDER = "ASC"
 
 
 @require_GET
 @csrf_exempt
 def authenticate(request):
-    url = "https://api.credly.com/v1.1/authenticate"
+    url = "https://apistaging.credly.com/v1.1/authenticate"
     credentials = HTTPBasicAuth(username, password)
     response = requests.post(url, auth=credentials, headers=header)
     
@@ -49,12 +53,15 @@ def authenticate(request):
 
 @require_GET
 def findBadges(request):
-    url = "https://api.credly.com/v1.1/me/badges/created?access_token=" + token + "&page=1&per_page=10&order_direction=ASC"
+    query = request.GET.get("search", "")
+    memberId = int(request.GET.get("userId", 0))
+    showDetails = request.GET.get("details", False)
+    pageNum = int(request.GET.get("page", DEFAULT_PAGE_NUM))
+    badgesPerPage = int(request.GET.get("size", BADGES_PER_PAGE))
+    orderDirection = request.GET.get("direction", DEFAULT_ORDER)
+    
+    url = "https://apistaging.credly.com/v1.1/badges?query=%s&member_id=%dverbose=%d&page=%d&per_page=%d&order_direction=%s&access_token=%s" % (query, memberId, showDetails, pageNum, badgesPerPage, orderDirection, token)
     response = requests.get(url, headers=header)
     
-    return HttpResponse(response.content) #CCCCCCC
-    
-    
-
-
+    return HttpResponse(response.content)    
 
