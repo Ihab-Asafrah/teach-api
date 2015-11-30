@@ -7,61 +7,67 @@ Created on Nov 24, 2015
 '''
 
 import json
-import urlparse
-import django.contrib.auth
-from django.shortcuts import render
-from django.conf import settings
 from django.http import HttpResponse, HttpResponseRedirect
-from django.core.urlresolvers import reverse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST, require_GET
-from django.utils.crypto import get_random_string
-import django_browserid.base
 import requests
-from rest_framework import routers
-from rest_framework.authtoken.models import Token
-from . import webmaker, new_webmaker
-from .new_webmaker import get_idapi_url
-import httplib, urllib
 from requests.auth import HTTPBasicAuth
-from django.views.decorators.csrf import requires_csrf_token 
-from mmap import PAGESIZE
+
+from views import check_origin
+from views import json_response
 
 
-header = {"X-Api-Key": "b22824fd98b0c98cebcd828fcc060949", 
-          "X-Api-Secret": "XsfOH17tBtDEGB7iJ6UMBwApd45n0SOHz/hXqb2XXJ6FIqDt1ppBBNt9bM0xAdCI1r0CtjZ8fjHMC3krdw0bPQhHzOzhq4U3RYYGDG2n5dad1hltc/nc8OKsPCk65CW+gMCoxht8E0bdLm6A1nYOJlyrDCJhYRwwhBgy1GxvbLM="}
 
-username = "mozilla@credly.com"
-password = "V9tuTUgy"
-token = "6685a1a0022cb8219ecb1305de6f83f804e6ba0d047fc595d3abb811fbcb647f504c7fcd74cd8efe69f31a78bd72294a136c0ed573ca6dc68a7a42473c5b0d18"
+CREDLY_APP_API_KEY="b22824fd98b0c98cebcd828fcc060949"
+CREDLY_APP_SECRET_KEY="XsfOH17tBtDEGB7iJ6UMBwApd45n0SOHz/hXqb2XXJ6FIqDt1ppBBNt9bM0xAdCI1r0CtjZ8fjHMC3krdw0bPQhHzOzhq4U3RYYGDG2n5dad1hltc/nc8OKsPCk65CW+gMCoxht8E0bdLm6A1nYOJlyrDCJhYRwwhBgy1GxvbLM="
+
+
+header = {"X-Api-Key": CREDLY_APP_API_KEY,"X-Api-Secret": CREDLY_APP_SECRET_KEY}
+
 
 DEFAULT_PAGE_NUM = 1
 BADGES_PER_PAGE = 10
 DEFAULT_ORDER = "ASC"
+BADGES_API_URL = 'https://apistaging.credly.com/v1.1'
+token='2fa1b38ac37a45a3d5e59fd5c3046124361f958221ea276d11ff34b4ebd29f9a7eaf0d6573c837457af13eee943a71cfeb4324041e73b68c6e65174c42ad0ecf'
 
-
-@require_GET
+@require_POST
 @csrf_exempt
 def authenticate(request):
-    url = "https://apistaging.credly.com/v1.1/authenticate"
-    credentials = HTTPBasicAuth(username, password)
+    # @todo
+    # please check this before the production
+
+    res = check_origin(request)
+    if res is None:
+        return HttpResponse('invalid origin', status=403)
+    res['access-control-allow-credentials'] = 'true'
+
+    url = BADGES_API_URL + "/authenticate"
+    credentials = HTTPBasicAuth(request.POST.get('username'), request.POST.get('password'))
+
     response = requests.post(url, auth=credentials, headers=header)
-    
-    return HttpResponse(response.content)
-
-
+    return json_response(res, json.JSONDecoder().decode(response.content))
 
 @require_GET
 def findBadges(request):
+    # @todo
+    # please check this before the production
+
+    res = check_origin(request)
+    if res is None:
+        return HttpResponse('invalid origin', status=403)
+    res['access-control-allow-credentials'] = 'true'
+
     query = request.GET.get("search", "")
     memberId = int(request.GET.get("userId", 0))
     showDetails = request.GET.get("details", False)
     pageNum = int(request.GET.get("page", DEFAULT_PAGE_NUM))
     badgesPerPage = int(request.GET.get("size", BADGES_PER_PAGE))
     orderDirection = request.GET.get("direction", DEFAULT_ORDER)
-    
-    url = "https://apistaging.credly.com/v1.1/badges?query=%s&member_id=%dverbose=%d&page=%d&per_page=%d&order_direction=%s&access_token=%s" % (query, memberId, showDetails, pageNum, badgesPerPage, orderDirection, token)
+
+    url = "/badges?query=%s&member_id=%dverbose=%d&page=%d&per_page=%d&order_direction=%s&access_token=%s" % (query, memberId, showDetails, pageNum, badgesPerPage, orderDirection, token)
+    url = BADGES_API_URL + url
     response = requests.get(url, headers=header)
-    
-    return HttpResponse(response.content)    
+
+    return json_response(res,json.JSONDecoder().decode(response.content))
 

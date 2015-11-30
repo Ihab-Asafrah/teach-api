@@ -117,7 +117,10 @@ if IDAPI_ENABLE_FAKE_OAUTH2:
 if DISCOURSE_SSO_SECRET or is_running_test_suite():
     INSTALLED_APPS += ('discourse_sso',)
 
-MIDDLEWARE_CLASSES = ()
+MIDDLEWARE_CLASSES = (
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
+)
 
 if not DEBUG:
     MIDDLEWARE_CLASSES += (
@@ -236,6 +239,9 @@ TEMPLATE_DIRS = (
 )
 
 CORS_ORIGIN_ALLOW_ALL = True
+
+# @todo
+# check this before production
 CORS_URLS_REGEX = r'^/api/.*$'
 
 CORS_API_LOGIN_ORIGINS = os.environ.get(
