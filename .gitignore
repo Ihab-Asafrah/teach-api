@@ -3,4 +3,4 @@ staticfiles
 venv
 .env
 *.sqlite3
-*.idea/
+.idea/
