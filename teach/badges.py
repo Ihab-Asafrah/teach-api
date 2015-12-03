@@ -12,6 +12,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST, require_GET
 import requests
 from requests.auth import HTTPBasicAuth
+from urllib import urlencode
 
 from views import check_origin
 from views import json_response
@@ -46,10 +47,11 @@ def authenticate(request):
     credentials = HTTPBasicAuth(request.POST.get('username'), request.POST.get('password'))
 
     response = requests.post(url, auth=credentials, headers=header)
+    return HttpResponse(user)
     return json_response(res, json.JSONDecoder().decode(response.content))
 
 @require_GET
-def findBadges(request):
+def find_badges(request):
     # @todo
     # please check this before the production
 
@@ -68,6 +70,24 @@ def findBadges(request):
     url = "/badges?query=%s&member_id=%dverbose=%d&page=%d&per_page=%d&order_direction=%s&access_token=%s" % (query, memberId, showDetails, pageNum, badgesPerPage, orderDirection, token)
     url = BADGES_API_URL + url
     response = requests.get(url, headers=header)
+
+    return json_response(res,json.JSONDecoder().decode(response.content))
+
+
+@require_GET
+def my_badges(request,type="all"):
+    res = check_origin(request)
+    if res is None:
+        return HttpResponse('invalid origin', status=403)
+    parameters={"access_token": token}
+    parameters["page"] = int(request.GET.get("page", DEFAULT_PAGE_NUM))
+    parameters["per_page"] = int(request.GET.get("size", BADGES_PER_PAGE))
+    parameters["order_direction"] = request.GET.get("direction", DEFAULT_ORDER)
+    query_string = urlencode(parameters)
+    endpoint_url = '/me/badges?'
+    url = BADGES_API_URL + endpoint_url + query_string
+    response = requests.get(url, headers=header)
+    res.status_code = response.status_code
 
     return json_response(res,json.JSONDecoder().decode(response.content))
 

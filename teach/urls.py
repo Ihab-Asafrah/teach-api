@@ -41,9 +41,10 @@ urlpatterns = [
     url(r'^admin/', include(teach_admin.urls)),
     
     # URLs for functions to call credly APIs.
-    url(r"^authenticate/", "teach.badges.authenticate", name="authenticate"),
-    url(r"^find/", "teach.badges.findBadges", name="find"),
-    
+    url(r"^authenticate/$", "teach.badges.authenticate", name="authenticate"),
+    url(r"^find/$", "teach.badges.find_badges", name="find"),
+    url(r"^my_badges/$", "teach.badges.my_badges", name="my_badges"),
+
 ]
 
 if settings.IDAPI_ENABLE_FAKE_OAUTH2:
